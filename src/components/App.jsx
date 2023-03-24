@@ -1,70 +1,53 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Searchbar from './Searchbar/Searchbar';
-import Api from '../Api';
+import api from '../Api';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const apiSearch = new Api();
+export function App() {
+  const [searchingWord, setSearchingWord] = useState('');
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
 
-export class App extends Component {
-  state = {
-    searchingWord: '',
-    items: [],
-    isLoading: false,
-    error: '',
-  };
-  componentDidUpdate(_, prevState) {
-    if (
-      prevState.searchingWord !== this.state.searchingWord &&
-      this.state.searchingWord !== ''
-    ) {
-      this.setState({ isLoading: true });
-      apiSearch.word = this.state.searchingWord;
-      apiSearch
-        .searchPhoto()
-        .then(({ data }) => this.setState({ items: data.hits }))
+  useEffect(() => {
+    if (searchingWord !== '') {
+      setIsLoading(true);
+
+      api(searchingWord, page)
+        .then(({ data }) => setItems(prev => [...prev, ...data.hits]))
         .catch(error => {
-          this.setState({ error });
+          setError(error);
           toast('Upppps!');
         })
-        .finally(this.setState({ isLoading: false }));
+        .finally(setIsLoading(false));
     }
-  }
+  }, [page, searchingWord]);
 
-  onSubmit = e => {
+  function onSubmit(e) {
     e.preventDefault();
     const searchingWord = e.target[1].value;
-    this.setState({ searchingWord });
-    apiSearch.resetPage();
-  };
-
-  onLoadMore = e => {
-    this.setState({ isLoading: true });
-    apiSearch.incrementPage();
-    apiSearch
-      .searchPhoto()
-      .then(({ data }) =>
-        this.setState(prevState => ({
-          items: [...prevState.items, ...data.hits],
-        }))
-      )
-      .finally(this.setState({ isLoading: false }));
-  };
-
-  render() {
-    return (
-      <>
-        <Searchbar onSubmit={this.onSubmit} />
-        {this.state.error && <ToastContainer />}
-        <ImageGallery items={this.state.items} />
-        {this.state.isLoading && <Loader />}
-        {this.state.items.length > 0 && this.state.searchingWord && (
-          <Button onLoadMore={this.onLoadMore} />
-        )}
-      </>
-    );
+    setSearchingWord(searchingWord);
+    setItems([]);
+    setPage(1);
   }
+
+  function onLoadMore() {
+    setIsLoading(true);
+    setPage(prev => prev + 1);
+  }
+
+  return (
+    <>
+      <Searchbar onSubmit={onSubmit} />
+      {error && <ToastContainer />}
+      <ImageGallery items={items} />
+      {isLoading && <Loader />}
+      {items.length > 0 && searchingWord && <Button onLoadMore={onLoadMore} />}
+    </>
+  );
 }

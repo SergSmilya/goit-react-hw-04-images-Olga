@@ -1,31 +1,36 @@
 import css from './Modal.module.css';
 import { createPortal } from 'react-dom';
-import { Component } from 'react';
+import { useEffect } from 'react';
 
 const portal = document.getElementById('modal-root');
 
-export default class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.closeModal);
-  }
+export default function Modal({ modalToggle, largeImageURL, tags }) {
+  useEffect(() => {
+    window.addEventListener('keydown', closeModal);
 
-  closeModal = e => {
-    if (e.code === 'Escape' || e.currentTarget === e.target) {
-      this.props.modalToggle();
+    function closeModal(e) {
+      if (e.code === 'Escape') {
+        modalToggle();
+      }
     }
-  };
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.closeModal);
+
+    return () => {
+      window.removeEventListener('keydown', closeModal);
+    };
+  }, [modalToggle]);
+
+  function closeModalByClick(e) {
+    if (e.currentTarget === e.target) {
+      modalToggle();
+    }
   }
 
-  render() {
-    return createPortal(
-      <div className={css.Overlay} onClick={this.closeModal}>
-        <div className={css.Modal}>
-          <img src={this.props.largeImageURL} alt={this.props.tags} />
-        </div>
-      </div>,
-      portal
-    );
-  }
+  return createPortal(
+    <div className={css.Overlay} onClick={closeModalByClick}>
+      <div className={css.Modal}>
+        <img src={largeImageURL} alt={tags} />
+      </div>
+    </div>,
+    portal
+  );
 }

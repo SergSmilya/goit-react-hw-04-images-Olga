@@ -1,41 +1,35 @@
 import Modal from 'components/Modal/Modal';
-import { Component } from 'react';
+import { useState } from 'react';
 import css from './ImageGalleryItem.module.css';
 
-export default class ImageGalleryItem extends Component {
-  state = {
-    isModalOpen: false,
-  };
+export default function ImageGalleryItem({ item }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  onImgClick = e => {
-    this.modalToggle();
-  };
-
-  modalToggle = () => {
-    this.setState({
-      isModalOpen: !this.state.isModalOpen,
-    });
-  };
-
-  render() {
-    const { webformatURL, tags, largeImageURL } = this.props.item;
-
-    return (
-      <li className={css.ImageGalleryItem}>
-        <img
-          onClick={this.onImgClick}
-          src={webformatURL}
-          alt={tags}
-          className={css.ImageGalleryItemImage}
-        />
-        {this.state.isModalOpen && (
-          <Modal
-            largeImageURL={largeImageURL}
-            tags={tags}
-            modalToggle={this.modalToggle}
-          />
-        )}
-      </li>
-    );
+  function onImgClick(e) {
+    modalToggle();
   }
+
+  function modalToggle() {
+    setIsModalOpen(!isModalOpen);
+  }
+
+  const { webformatURL, tags, largeImageURL } = item;
+
+  return (
+    <li className={css.ImageGalleryItem}>
+      <img
+        onClick={onImgClick}
+        src={webformatURL}
+        alt={tags}
+        className={css.ImageGalleryItemImage}
+      />
+      {isModalOpen && (
+        <Modal
+          largeImageURL={largeImageURL}
+          tags={tags}
+          modalToggle={modalToggle}
+        />
+      )}
+    </li>
+  );
 }
